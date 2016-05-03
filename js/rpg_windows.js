@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_windows.js
+// rpg_windows.js v1.1.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -5431,7 +5431,14 @@ Window_ActorCommand.prototype.processOk = function() {
 Window_ActorCommand.prototype.selectLast = function() {
     this.select(0);
     if (this._actor && ConfigManager.commandRemember) {
-        this.selectSymbol(this._actor.lastCommandSymbol());
+        var symbol = this._actor.lastCommandSymbol();
+        this.selectSymbol(symbol);
+        if (symbol === 'skill') {
+            var skill = this._actor.lastBattleSkill();
+            if (skill) {
+                this.selectExt(skill.stypeId);
+            }
+        }
     }
 };
 
