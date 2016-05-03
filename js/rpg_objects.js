@@ -10258,7 +10258,7 @@ Game_Interpreter.prototype.command320 = function() {
 Game_Interpreter.prototype.command321 = function() {
     var actor = $gameActors.actor(this._params[0]);
     if (actor && $dataClasses[this._params[1]]) {
-        actor.changeClass(this._params[1], false);
+        actor.changeClass(this._params[1], this._params[2]);
     }
     return true;
 };
