@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_objects.js
+// rpg_objects.js v1.1.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -1406,7 +1406,7 @@ Game_Action.prototype.decideRandomTarget = function() {
         target = this.opponentsUnit().randomTarget();
     }
     if (target) {
-        this._targetIndex = target.index;
+        this._targetIndex = target.index();
     } else {
         this.clear();
     }
@@ -1528,7 +1528,7 @@ Game_Action.prototype.evaluate = function() {
             value += targetValue;
         } else if (targetValue > value) {
             value = targetValue;
-            this._targetIndex = target.index;
+            this._targetIndex = target.index();
         }
     }, this);
     value *= this.numRepeats();
@@ -1692,7 +1692,9 @@ Game_Action.prototype.evalDamageFormula = function(target) {
         var b = target;
         var v = $gameVariables._data;
         var sign = ([3, 4].contains(item.damage.type) ? -1 : 1);
-        return Math.max(eval(item.damage.formula), 0) * sign;
+        var value = Math.max(eval(item.damage.formula), 0) * sign;
+        if (isNaN(value)) value = 0;
+        return value;
     } catch (e) {
         return 0;
     }
