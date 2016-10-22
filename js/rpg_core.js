@@ -1315,6 +1315,14 @@ Bitmap.prototype.checkDirty = function() {
 };
 
 //-----------------------------------------------------------------------------
+
+var waitForLoading = false;
+var register = false;
+
+function handleiOSTouch(ev) {
+        if (Graphics._video.paused && Graphics.isVideoPlaying())Graphics._video.play();
+}
+
 /**
  * The static class that carries out graphics processing.
  *
@@ -1657,6 +1665,14 @@ Graphics.playVideo = function(src) {
     this._video.onerror = this._onVideoError.bind(this);
     this._video.onended = this._onVideoEnd.bind(this);
     this._video.load();
+
+    if (Utils.isMobileSafari()) {
+        waitForLoading = true;
+        if (!register) {
+            register = true;
+            document.addEventListener('touchstart', handleiOSTouch);
+        }
+    }
 };
 
 /**
@@ -1667,6 +1683,7 @@ Graphics.playVideo = function(src) {
  * @return {Boolean} True if the video is playing
  */
 Graphics.isVideoPlaying = function() {
+    if (Utils.isMobileSafari()) return waitForLoading || (this._video && this._isVideoVisible());
     return this._video && this._isVideoVisible();
 };
 
@@ -2257,6 +2274,9 @@ Graphics._applyCanvasFilter = function() {
 Graphics._onVideoLoad = function() {
     this._video.play();
     this._updateVisibility(true);
+    if (Utils.isMobileSafari()) {
+        waitForLoading = false;
+    }
 };
 
 /**
@@ -2275,6 +2295,13 @@ Graphics._onVideoError = function() {
  */
 Graphics._onVideoEnd = function() {
     this._updateVisibility(false);
+
+    if (Utils.isMobileSafari()) {
+        if (register) {
+            document.removeEventListener('touchstart', handleiOSTouch);
+            register = false;
+        }
+    }
 };
 
 /**
