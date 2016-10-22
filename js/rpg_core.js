@@ -2829,6 +2829,10 @@ Input._updateGamepadState = function(gamepad) {
     var buttons = gamepad.buttons;
     var axes = gamepad.axes;
     var threshold = 0.5;
+    newState[12] = false;
+    newState[13] = false;
+    newState[14] = false;
+    newState[15] = false;
     for (var i = 0; i < buttons.length; i++) {
         newState[i] = buttons[i].pressed;
     }
