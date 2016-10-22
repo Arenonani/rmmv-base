@@ -3958,7 +3958,7 @@ Game_Actor.prototype.forgetSkill = function(skillId) {
 };
 
 Game_Actor.prototype.isLearnedSkill = function(skillId) {
-    return this._skills.contains(skillId);
+    return this._skills.contains(skillId) || this.addedSkills().contains(skillId);
 };
 
 Game_Actor.prototype.changeClass = function(classId, keepExp) {
