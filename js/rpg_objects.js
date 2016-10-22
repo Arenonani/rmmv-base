@@ -1770,13 +1770,21 @@ Game_Action.prototype.executeMpDamage = function(target, value) {
 
 Game_Action.prototype.gainDrainedHp = function(value) {
     if (this.isDrain()) {
-        this.subject().gainHp(value);
+       var gainTarget = this.subject();
+       if (this._reflectionTarget !== undefined) {
+            gainTarget = this._reflectionTarget;
+        }
+       gainTarget.gainHp(value);
     }
 };
 
 Game_Action.prototype.gainDrainedMp = function(value) {
     if (this.isDrain()) {
-        this.subject().gainMp(value);
+       var gainTarget = this.subject();
+       if (this._reflectionTarget !== undefined) {
+           gainTarget = this._reflectionTarget;
+       }
+       gainTarget.gainMp(value);
     }
 };
 
@@ -10374,11 +10382,19 @@ Game_Interpreter.prototype.command336 = function() {
 
 // Show Battle Animation
 Game_Interpreter.prototype.command337 = function() {
-    this.iterateEnemyIndex(this._params[0], function(enemy) {
-        if (enemy.isAlive()) {
-            enemy.startAnimation(this._params[1], false, 0);
-        }
-    }.bind(this));
+    if (this._params[2] == true) {
+        this.iterateEnemyIndex(-1,function(enemy) {
+            if (enemy.isAlive()) {
+                enemy.startAnimation(this._params[1],false,0);
+            }
+        }.bind(this));
+    } else {
+        this.iterateEnemyIndex(this._params[0], function (enemy) {
+            if (enemy.isAlive()) {
+                enemy.startAnimation(this._params[1], false, 0);
+            }
+        }.bind(this));
+    }
     return true;
 };
 
