@@ -2344,13 +2344,14 @@ BattleManager.invokeCounterAttack = function(subject, target) {
     action.setAttack();
     action.apply(subject);
     this._logWindow.displayCounter(target);
-    this._logWindow.displayActionResults(subject, subject);
+    this._logWindow.displayActionResults(target, subject);
 };
 
 BattleManager.invokeMagicReflection = function(subject, target) {
+	this._action._reflectionTarget = target;
     this._logWindow.displayReflection(target);
     this._action.apply(subject);
-    this._logWindow.displayActionResults(subject, subject);
+    this._logWindow.displayActionResults(target, subject);
 };
 
 BattleManager.applySubstitute = function(target) {
