@@ -3462,7 +3462,6 @@ Sprite.prototype.initialize = function(bitmap) {
     this._bitmap = null;
     this._frame = new Rectangle();
     this._realFrame = new Rectangle();
-    this._offset = new Point();
     this._blendColor = [0, 0, 0, 0];
     this._colorTone = [0, 0, 0, 0];
     this._canvas = null;
@@ -3689,8 +3688,8 @@ Sprite.prototype._refresh = function() {
     this._realFrame.y = realY;
     this._realFrame.width = realW;
     this._realFrame.height = realH;
-    this._offset.x = realX - frameX;
-    this._offset.y = realY - frameY;
+    this.pivot.x = frameX - realX;
+    this.pivot.y = frameY - realY;
 
     if (realW > 0 && realH > 0) {
         if (this._needsTint()) {
@@ -3713,6 +3712,7 @@ Sprite.prototype._refresh = function() {
         this.texture.baseTexture.height = Math.max(this.texture.baseTexture.height, this._frame.y + this._frame.height);
         this.texture.frame = this._frame;
     }
+    this.texture._updateID++;
 };
 
 /**
@@ -3823,17 +3823,6 @@ Sprite.prototype._executeTint = function(x, y, w, h) {
     context.globalAlpha = 1;
     context.drawImage(this._bitmap.canvas, x, y, w, h, 0, 0, w, h);
 };
-
-/**
- * @method updateTransform
- * @private
- */
-Sprite.prototype.updateTransform = function() {
-    PIXI.Sprite.prototype.updateTransform.call(this);
-    this.worldTransform.tx += this._offset.x;
-    this.worldTransform.ty += this._offset.y;
-};
-
 
 Sprite.prototype._renderCanvas_PIXI = PIXI.Sprite.prototype._renderCanvas;
 Sprite.prototype._renderWebGL_PIXI = PIXI.Sprite.prototype._renderWebGL;
@@ -5407,13 +5396,13 @@ function TilingSprite() {
     this.initialize.apply(this, arguments);
 }
 
-TilingSprite.prototype = Object.create(PIXI.extras.TilingSprite.prototype);
+TilingSprite.prototype = Object.create(PIXI.extras.PictureTilingSprite.prototype);
 TilingSprite.prototype.constructor = TilingSprite;
 
 TilingSprite.prototype.initialize = function(bitmap) {
     var texture = new PIXI.Texture(new PIXI.BaseTexture());
 
-    PIXI.extras.TilingSprite.call(this, texture);
+    PIXI.extras.PictureTilingSprite.call(this, texture);
 
     this._bitmap = null;
     this._width = 0;
@@ -5431,8 +5420,8 @@ TilingSprite.prototype.initialize = function(bitmap) {
     this.bitmap = bitmap;
 };
 
-TilingSprite.prototype._renderCanvas_PIXI = PIXI.extras.TilingSprite.prototype._renderCanvas;
-TilingSprite.prototype._renderWebGL_PIXI = PIXI.extras.TilingSprite.prototype._renderWebGL;
+TilingSprite.prototype._renderCanvas_PIXI = PIXI.extras.PictureTilingSprite.prototype._renderCanvas;
+TilingSprite.prototype._renderWebGL_PIXI = PIXI.extras.PictureTilingSprite.prototype._renderWebGL;
 
 /**
  * @method _renderCanvas
@@ -5586,11 +5575,28 @@ TilingSprite.prototype._refresh = function() {
         frame.width = this._bitmap.width;
         frame.height = this._bitmap.height;
     }
-    var lastTrim = this.texture.trim;
-    this.texture.trim = frame;
     this.texture.frame = frame;
-    this.texture.trim = lastTrim;
+    this.texture._updateID++;
     this.tilingTexture = null;
+};
+
+
+TilingSprite.prototype._speedUpCustomBlendModes = Sprite.prototype._speedUpCustomBlendModes;
+
+/**
+ * @method _renderWebGL
+ * @param {Object} renderer
+ * @private
+ */
+TilingSprite.prototype._renderWebGL = function(renderer) {
+    if (this._bitmap) {
+        this._bitmap.touch();
+        this._bitmap.checkDirty();
+    }
+
+    this._speedUpCustomBlendModes(renderer);
+
+    this._renderWebGL_PIXI(renderer);
 };
 
 // The important members from Pixi.js
@@ -6453,7 +6459,14 @@ WindowLayer.prototype.initialize = function() {
     this._renderSprite = null;
     this.filterArea = new PIXI.Rectangle();
     this.filters = [WindowLayer.voidFilter];
+
+    //temporary fix for memory leak bug
+    this.on('removed', this.onRemoveAsAChild);
 };
+
+WindowLayer.prototype.onRemoveAsAChild = function() {
+    this.removeChildren();
+}
 
 WindowLayer.voidFilter = new PIXI.filters.VoidFilter();
 
@@ -6601,10 +6614,16 @@ WindowLayer.prototype.renderWebGL = function(renderer) {
     renderer.filterManager.pushFilter(this, this.filters);
     renderer.currentRenderer.start();
 
+    var shift = new PIXI.Point();
+    var rt = renderer._activeRenderTarget;
+    var projectionMatrix = rt.projectionMatrix;
+    shift.x = (projectionMatrix.tx + 1) / 2 * rt.size.width;
+    shift.y = (projectionMatrix.ty + 1) / 2 * rt.size.height;
+
     for (var i = 0; i < this.children.length; i++) {
         var child = this.children[i];
         if (child._isWindow && child.visible && child.openness > 0) {
-            this._maskWindow(child);
+            this._maskWindow(child, shift);
             renderer.maskManager.pushScissorMask(this, this._windowMask);
             renderer.clear();
             renderer.maskManager.popScissorMask();
@@ -6629,12 +6648,12 @@ WindowLayer.prototype.renderWebGL = function(renderer) {
  * @param {Window} window
  * @private
  */
-WindowLayer.prototype._maskWindow = function(window) {
+WindowLayer.prototype._maskWindow = function(window, shift) {
     this._windowMask._currentBounds = null;
     this._windowMask.boundsDirty = true;
     var rect = this._windowRect;
-    rect.x = window.x;
-    rect.y = window.y + window.height / 2 * (1 - window._openness / 255);
+    rect.x = shift.x + window.x;
+    rect.y = shift.y + window.y + window.height / 2 * (1 - window._openness / 255);
     rect.width = window.width;
     rect.height = window.height * window._openness / 255;
 };
