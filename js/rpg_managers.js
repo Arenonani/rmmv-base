@@ -2059,15 +2059,15 @@ BattleManager.update = function() {
 
 BattleManager.updateEvent = function() {
     switch (this._phase) {
-    case 'start':
-    case 'turn':
-    case 'turnEnd':
-        if (this.isActionForced()) {
-            this.processForcedAction();
-            return true;
-        } else {
-            return this.updateEventMain();
-        }
+        case 'start':
+        case 'turn':
+        case 'turnEnd':
+            if (this.isActionForced()) {
+                this.processForcedAction();
+                return true;
+            } else {
+                return this.updateEventMain();
+            }
     }
     return this.checkAbort2();
 };
