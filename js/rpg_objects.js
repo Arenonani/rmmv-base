@@ -3958,7 +3958,11 @@ Game_Actor.prototype.forgetSkill = function(skillId) {
 };
 
 Game_Actor.prototype.isLearnedSkill = function(skillId) {
-    return this._skills.contains(skillId) || this.addedSkills().contains(skillId);
+    return this._skills.contains(skillId);
+};
+
+Game_Actor.prototype.hasSkill = function(skillId) {
+    return this.skills().contains($dataSkills[skillId]);
 };
 
 Game_Actor.prototype.changeClass = function(classId, keepExp) {
@@ -9220,7 +9224,7 @@ Game_Interpreter.prototype.command111 = function() {
                 result = actor.isClass($dataClasses[n]);
                 break;
             case 3:  // Skill
-                result = actor.isLearnedSkill(n);
+                result = actor.hasSkill(n);
                 break;
             case 4:  // Weapon
                 result = actor.hasWeapon($dataWeapons[n]);
