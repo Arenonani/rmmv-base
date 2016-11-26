@@ -1738,7 +1738,6 @@ SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
         case 116:   // F5
             if (Utils.isNwjs()) {
-                window.alert($gameSystem && $gameSystem.isJapanese() ? "リロードを実行します。ゲームパッドを使用している場合、パッドの接続が途切れることがあります" : "Reloading the game with a gamepad connected will cause a disconnect."); // TODO: Get properly translated
                 location.reload();
             }
             break;
