@@ -6613,8 +6613,8 @@ WindowLayer.prototype.renderWebGL = function(renderer) {
     var shift = new PIXI.Point();
     var rt = renderer._activeRenderTarget;
     var projectionMatrix = rt.projectionMatrix;
-    shift.x = (projectionMatrix.tx + 1) / 2 * rt.size.width;
-    shift.y = (projectionMatrix.ty + 1) / 2 * rt.size.height;
+    shift.x = Math.round((projectionMatrix.tx + 1) / 2 * rt.sourceFrame.width);
+    shift.y = Math.round((projectionMatrix.ty + 1) / 2 * rt.sourceFrame.height);
 
     for (var i = 0; i < this.children.length; i++) {
         var child = this.children[i];
