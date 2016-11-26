@@ -2070,7 +2070,7 @@ BattleManager.updateEvent = function() {
             return this.updateEventMain();
         }
     }
-    return this.checkAbort();
+    return this.checkAbort2();
 };
 
 BattleManager.updateEventMain = function() {
@@ -2417,6 +2417,15 @@ BattleManager.checkAbort = function() {
     return false;
 };
 
+BattleManager.checkAbort2 = function() {
+    if ($gameParty.isEmpty() || this.isAborting()) {
+        SoundManager.playEscape();
+        this._escaped = true;
+        this.processAbort();
+    }
+    return false;
+};
+
 BattleManager.processVictory = function() {
     $gameParty.removeBattleStates();
     $gameParty.performVictory();
@@ -2479,7 +2488,7 @@ BattleManager.updateBattleEnd = function() {
     if (this.isBattleTest()) {
         AudioManager.stopBgm();
         SceneManager.exit();
-    } else if ($gameParty.isAllDead()) {
+    } else if (!this._escaped && $gameParty.isAllDead()) {
         if (this._canLose) {
             $gameParty.reviveBattleMembers();
             SceneManager.pop();

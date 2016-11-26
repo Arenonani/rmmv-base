@@ -4261,6 +4261,19 @@ Game_Actor.prototype.setLastCommandSymbol = function(symbol) {
     this._lastCommandSymbol = symbol;
 };
 
+Game_Actor.prototype.testEscape = function(item) {
+    return item.effects.some(function(effect, index, ar) {
+        return effect && effect.code === Game_Action.EFFECT_SPECIAL;
+    });
+};
+
+Game_Actor.prototype.meetsUsableItemConditions = function(item) {
+    if($gameParty.inBattle() && !BattleManager.canEscape() && this.testEscape(item)){
+        return false;
+    }
+    return this.canMove() && this.isOccasionOk(item);
+};
+
 //-----------------------------------------------------------------------------
 // Game_Enemy
 //
