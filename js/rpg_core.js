@@ -5546,11 +5546,6 @@ TilingSprite.prototype.setFrame = function(x, y, width, height) {
 TilingSprite.prototype.updateTransform = function() {
     this.tilePosition.x = Math.round(-this.origin.x);
     this.tilePosition.y = Math.round(-this.origin.y);
-    //TODO: ivan: i really dont know whats these about
-    // if (!this.tilingTexture) {
-    //     this.originalTexture = null;
-    //     this.generateTilingTexture(true);
-    // }
     this.updateTransformTS();
 };
 
