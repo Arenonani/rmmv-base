@@ -660,6 +660,7 @@ Bitmap.snap = function(stage) {
     } else {
         //TODO: Ivan: what if stage is not present?
     }
+    renderTexture.destroy({ destroyBase: true });
     bitmap._setDirty();
     return bitmap;
 };
