@@ -191,7 +191,9 @@ Utils.RPGMAKER_VERSION = "1.5.2";
  * @return {Boolean} True if the option is in the query string
  */
 Utils.isOptionValid = function(name) {
-    return location.search.slice(1).split('&').contains(name);
+    if (location.search.slice(1).split('&').contains(name)) {return 1;};
+    if (typeof nw !== "undefined" && nw.App.argv.length > 0 && nw.App.argv[0].split('&').contains(name)) {return 1;};
+    return 0;
 };
 
 /**
@@ -1743,7 +1745,7 @@ Graphics.initialize = function(width, height, type) {
     this._errorPrinter = null;
     this._canvas = null;
     this._video = null;
-    this._videoUnlocked = false;
+    this._videoUnlocked = !Utils.isMobileDevice();
     this._videoLoading = false;
     this._upperCanvas = null;
     this._renderer = null;
