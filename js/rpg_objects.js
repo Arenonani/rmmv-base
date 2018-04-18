@@ -4272,10 +4272,10 @@ Game_Actor.prototype.testEscape = function(item) {
 };
 
 Game_Actor.prototype.meetsUsableItemConditions = function(item) {
-    if($gameParty.inBattle() && !BattleManager.canEscape() && this.testEscape(item)){
+    if ($gameParty.inBattle() && !BattleManager.canEscape() && this.testEscape(item)) {
         return false;
     }
-    return this.canMove() && this.isOccasionOk(item);
+    return Game_BattlerBase.prototype.meetsUsableItemConditions.call(this, item);
 };
 
 //-----------------------------------------------------------------------------
