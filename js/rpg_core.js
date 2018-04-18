@@ -2808,8 +2808,6 @@ Graphics._isVideoVisible = function() {
 Graphics._setupEventHandlers = function() {
     window.addEventListener('resize', this._onWindowResize.bind(this));
     document.addEventListener('keydown', this._onKeyDown.bind(this));
-    document.addEventListener('keydown', this._onTouchEnd.bind(this));
-    document.addEventListener('mousedown', this._onTouchEnd.bind(this));
     document.addEventListener('touchend', this._onTouchEnd.bind(this));
 };
 
@@ -7809,19 +7807,16 @@ WebAudio._createMasterGainNode = function() {
  * @private
  */
 WebAudio._setupEventHandlers = function() {
-    var resumeHandler = function() {
-        var context = WebAudio._context;
-        if (context && context.state === "suspended" && typeof context.resume === "function") {
-            context.resume().then(function() {
+    document.addEventListener("touchend", function() {
+            var context = WebAudio._context;
+            if (context && context.state === "suspended" && typeof context.resume === "function") {
+                context.resume().then(function() {
+                    WebAudio._onTouchStart();
+                })
+            } else {
                 WebAudio._onTouchStart();
-            })
-        } else {
-            WebAudio._onTouchStart();
-        }
-    };
-    document.addEventListener("keydown", resumeHandler);
-    document.addEventListener("mousedown", resumeHandler);
-    document.addEventListener("touchend", resumeHandler);
+            }
+    });
     document.addEventListener('touchstart', this._onTouchStart.bind(this));
     document.addEventListener('visibilitychange', this._onVisibilityChange.bind(this));
 };
