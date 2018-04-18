@@ -459,6 +459,154 @@ CacheMap.prototype.update = function(ticks, delta) {
     }
 };
 
+function ImageCache(){
+    this.initialize.apply(this, arguments);
+}
+
+ImageCache.limit = 10 * 1000 * 1000;
+
+ImageCache.prototype.initialize = function(){
+    this._items = {};
+};
+
+ImageCache.prototype.add = function(key, value){
+    this._items[key] = {
+        bitmap: value,
+        touch: Date.now(),
+        key: key
+    };
+
+    this._truncateCache();
+};
+
+ImageCache.prototype.get = function(key){
+    if(this._items[key]){
+        var item = this._items[key];
+        item.touch = Date.now();
+        return item.bitmap;
+    }
+
+    return null;
+};
+
+ImageCache.prototype.reserve = function(key, value, reservationId){
+    if(!this._items[key]){
+        this._items[key] = {
+            bitmap: value,
+            touch: Date.now(),
+            key: key
+        };
+    }
+
+    this._items[key].reservationId = reservationId;
+};
+
+ImageCache.prototype.releaseReservation = function(reservationId){
+    var items = this._items;
+
+    Object.keys(items)
+        .map(function(key){return items[key];})
+        .forEach(function(item){
+            if(item.reservationId === reservationId){
+                delete item.reservationId;
+            }
+        });
+};
+
+ImageCache.prototype._truncateCache = function(){
+    var items = this._items;
+    var sizeLeft = ImageCache.limit;
+
+    Object.keys(items).map(function(key){
+        return items[key];
+    }).sort(function(a, b){
+        return b.touch - a.touch;
+    }).forEach(function(item){
+        if(sizeLeft > 0 || this._mustBeHeld(item)){
+            var bitmap = item.bitmap;
+            sizeLeft -= bitmap.width * bitmap.height;
+        }else{
+            delete items[item.key];
+        }
+    }.bind(this));
+};
+
+ImageCache.prototype._mustBeHeld = function(item){
+    // request only is weak so It's purgeable
+    if(item.bitmap.isRequestOnly()) return false;
+    // reserved item must be held
+    if(item.reservationId) return true;
+    // not ready bitmap must be held (because of checking isReady())
+    if(!item.bitmap.isReady()) return true;
+    // then the item may purgeable
+    return false;
+};
+
+ImageCache.prototype.isReady = function(){
+    var items = this._items;
+    return !Object.keys(items).some(function(key){
+        return !items[key].bitmap.isRequestOnly() && !items[key].bitmap.isReady();
+    });
+};
+
+ImageCache.prototype.getErrorBitmap = function(){
+    var items = this._items;
+    var bitmap = null;
+    if(Object.keys(items).some(function(key){
+            if(items[key].bitmap.isError()){
+                bitmap = items[key].bitmap;
+                return true;
+            }
+            return false;
+        })) {
+        return bitmap;
+    }
+
+    return null;
+};
+function RequestQueue(){
+    this.initialize.apply(this, arguments);
+}
+
+RequestQueue.prototype.initialize = function(){
+    this._queue = [];
+};
+
+RequestQueue.prototype.enqueue = function(key, value){
+    this._queue.push({
+        key: key,
+        value: value,
+    });
+};
+
+RequestQueue.prototype.update = function(){
+    if(this._queue.length === 0) return;
+
+    var top = this._queue[0];
+    if(top.value.isRequestReady()){
+        this._queue.shift();
+        if(this._queue.length !== 0){
+            this._queue[0].value.startRequest();
+        }
+    }else{
+        top.value.startRequest();
+    }
+};
+
+RequestQueue.prototype.raisePriority = function(key){
+    for(var n = 0; n < this._queue.length; n++){
+        var item = this._queue[n];
+        if(item.key === key){
+            this._queue.splice(n, 1);
+            this._queue.unshift(item);
+            break;
+        }
+    }
+};
+
+RequestQueue.prototype.clear = function(){
+    this._queue.splice(0);
+};
 //-----------------------------------------------------------------------------
 /**
  * The point class.
@@ -8748,4 +8896,58 @@ Decrypter.extToEncryptExt = function(url) {
 
 Decrypter.readEncryptionkey = function(){
     this._encryptionKey = $dataSystem.encryptionKey.split(/(.{2})/).filter(Boolean);
+};
+
+//-----------------------------------------------------------------------------
+/**
+ * The static class that handles resource loading.
+ *
+ * @class ResourceHandler
+ */
+function ResourceHandler() {
+    throw new Error('This is a static class');
+}
+
+ResourceHandler._reloaders = [];
+ResourceHandler._defaultRetryInterval = [500, 1000, 3000];
+
+ResourceHandler.createLoader = function(url, retryMethod, resignMethod, retryInterval) {
+    retryInterval = retryInterval || this._defaultRetryInterval;
+    var reloaders = this._reloaders;
+    var retryCount = 0;
+    return function() {
+        if (retryCount < retryInterval.length) {
+            setTimeout(retryMethod, retryInterval[retryCount]);
+            retryCount++;
+        } else {
+            if (resignMethod) {
+                resignMethod();
+            }
+            if (url) {
+                if (reloaders.length === 0) {
+                    Graphics.printLoadingError(url);
+                    SceneManager.stop();
+                }
+                reloaders.push(function() {
+                    retryCount = 0;
+                    retryMethod();
+                });
+            }
+        }
+    };
+};
+
+ResourceHandler.exists = function() {
+    return this._reloaders.length > 0;
+};
+
+ResourceHandler.retry = function() {
+    if (this._reloaders.length > 0) {
+        Graphics.eraseLoadingError();
+        SceneManager.resume();
+        this._reloaders.forEach(function(reloader) {
+            reloader();
+        });
+        this._reloaders.length = 0;
+    }
 };
