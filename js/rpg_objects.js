@@ -271,6 +271,10 @@ Game_System.prototype.replayWalkingBgm = function() {
     }
 };
 
+Game_System.prototype.saveWalkingBgm2 = function() {
+	this._walkingBgm = $dataMap.bgm;
+};
+
 //-----------------------------------------------------------------------------
 // Game_Timer
 //
@@ -5785,7 +5789,11 @@ Game_Map.prototype.canvasToMapY = function(y) {
 
 Game_Map.prototype.autoplay = function() {
     if ($dataMap.autoplayBgm) {
-        AudioManager.playBgm($dataMap.bgm);
+        if ($gamePlayer.isInVehicle()) {
+            $gameSystem.saveWalkingBgm2();
+        } else {
+            AudioManager.playBgm($dataMap.bgm);
+        }
     }
     if ($dataMap.autoplayBgs) {
         AudioManager.playBgs($dataMap.bgs);
