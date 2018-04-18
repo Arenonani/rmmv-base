@@ -86,7 +86,7 @@ DataManager.loadDataFile = function(name, src) {
             DataManager.onLoad(window[name]);
         }
     };
-    xhr.onerror = function() {
+    xhr.onerror = this._mapLoader || function() {
         DataManager._errorUrl = DataManager._errorUrl || url;
     };
     window[name] = null;
@@ -1774,10 +1774,10 @@ function SceneManager() {
 }
 
 /*
- * Gets the current time in ms.
+ * Gets the current time in ms without on iOS Safari.
  * @private
  */
-SceneManager._getTimeInMs = function() {
+SceneManager._getTimeInMsWithoutMobileSafari = function() {
     return performance.now();
 };
 
@@ -1794,7 +1794,7 @@ SceneManager._screenHeight      = 624;
 SceneManager._boxWidth          = 816;
 SceneManager._boxHeight         = 624;
 SceneManager._deltaTime = 1.0 / 60.0;
-SceneManager._currentTime = SceneManager._getTimeInMs();
+if (!Utils.isMobileSafari()) SceneManager._currentTime = SceneManager._getTimeInMsWithoutMobileSafari();
 SceneManager._accumulator = 0.0;
 
 SceneManager.run = function(sceneClass) {
@@ -1972,7 +1972,7 @@ SceneManager.updateMain = function() {
         this.changeScene();
         this.updateScene();
     } else {
-        var newTime = this._getTimeInMs();
+        var newTime = this._getTimeInMsWithoutMobileSafari();
         var fTime = (newTime - this._currentTime) / 1000;
         if (fTime > 0.25) fTime = 0.25;
         this._currentTime = newTime;
@@ -2116,6 +2116,15 @@ SceneManager.snapForBackground = function() {
 
 SceneManager.backgroundBitmap = function() {
     return this._backgroundBitmap;
+};
+
+SceneManager.resume = function() {
+    this._stopped = false;
+    this.requestUpdate();
+    if (!Utils.isMobileSafari()) {
+        this._currentTime = this._getTimeInMsWithoutMobileSafari();
+        this._accumulator = 0;
+    }
 };
 
 //-----------------------------------------------------------------------------
