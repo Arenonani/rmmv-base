@@ -8204,6 +8204,11 @@ WebAudio.prototype._onXhrLoad = function(xhr) {
  * @private
  */
 WebAudio.prototype._startPlaying = function(loop, offset) {
+    if (this._loopLength > 0) {
+     while (offset >= this._loopStart + this._loopLength) {
+     offset -= this._loopLength;
+     }
+    }
     this._removeEndTimer();
     this._removeNodes();
     this._createNodes();
