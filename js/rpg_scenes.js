@@ -1315,6 +1315,10 @@ Scene_Skill.prototype.create = function() {
     this.createStatusWindow();
     this.createItemWindow();
     this.createActorWindow();
+};
+
+Scene_Skill.prototype.start = function() {
+    Scene_ItemBase.prototype.start.call(this);
     this.refreshActor();
 };
 
@@ -1548,6 +1552,10 @@ Scene_Status.prototype.create = function() {
     this._statusWindow.setHandler('pageup',   this.previousActor.bind(this));
     this._statusWindow.reserveFaceImages();
     this.addWindow(this._statusWindow);
+};
+
+Scene_Status.prototype.start = function() {
+    Scene_MenuBase.prototype.start.call(this);
     this.refreshActor();
 };
 
