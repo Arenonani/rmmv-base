@@ -355,7 +355,6 @@ CacheEntry.prototype.touch = function () {
         this.touchSeconds = cache.updateSeconds;
     } else if (this.freedByTTL) {
         this.freedByTTL = false;
-        //TODO: shall we log this event? its not normal
         if (!cache._inner[this.key]) {
             cache._inner[this.key] = this;
         }
@@ -658,7 +657,7 @@ Bitmap.snap = function(stage) {
         }
         context.drawImage(canvas, 0, 0);
     } else {
-        //TODO: Ivan: what if stage is not present?
+
     }
     renderTexture.destroy({ destroyBase: true });
     bitmap._setDirty();
@@ -3708,7 +3707,6 @@ Sprite.prototype._refresh = function() {
     } else if (this._bitmap) {
         this.texture.frame = Rectangle.emptyRectangle;
     } else {
-        //TODO: remove this
         this.texture.baseTexture.width = Math.max(this.texture.baseTexture.width, this._frame.x + this._frame.width);
         this.texture.baseTexture.height = Math.max(this.texture.baseTexture.height, this._frame.y + this._frame.height);
         this.texture.frame = this._frame;
